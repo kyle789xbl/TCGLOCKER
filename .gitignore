@@ -1,0 +1,40 @@
+# Archived/generated project clutter
+_archive/
+backups/
+magicmadhouse-*
+assets/pull/packs/
+assets/pull/tiers/
+assets/pull/pack.png
+assets/pull/pack-art-audit.json
+scripts/build_pull_pack_art.py
+
+# Local agent/MCP helpers
+.agents/
+.mcp.json
+skills-lock.json
+
+# Supabase local/backend artifacts hidden from public test repos
+supabase/.temp/
+supabase/migrations/
+
+# Local dependency folders
+node_modules/
+.pnpm-store/
+
+# Local environment/secrets
+.env
+.env.*
+!.env.example
+
+# Logs and runtime noise
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS/editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

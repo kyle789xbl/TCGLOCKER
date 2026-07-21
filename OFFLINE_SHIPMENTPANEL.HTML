@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>tcglocker Shipment Panel</title>
+    <link rel="stylesheet" href="offline-admin.css?v=ops-31" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="offline-admin.js?v=ops-31"></script>
+  </head>
+  <body data-panel="shipments">
+    <main class="shell">
+      <header class="topbar">
+        <div class="brand">
+          <strong>Offline Shipment Panel</strong>
+          <span>Process paid orders in #1, #2, #3 order, then handle shipping, completion, and customer-call issues.</span>
+        </div>
+        <nav class="nav">
+          <a href="index.html?v=anime-live-19">Store</a>
+          <a href="PullForSingles.HTML">Pulls</a>
+          <a href="OFFLINE_ADMIN.HTML">Stock admin</a>
+          <a href="PROFITSANDAUDIT_OFFLINE.HTML">Profit audit</a>
+          <button id="refreshButton" type="button">Refresh</button>
+          <button id="signOutButton" type="button">Sign out</button>
+        </nav>
+      </header>
+
+      <p class="status" id="status" role="status"></p>
+
+      <section class="auth-card hidden" id="authCard">
+        <h1>Admin sign in</h1>
+        <p class="panel-subtitle">Use the Supabase account added to the store admin allow-list.</p>
+        <form id="loginForm">
+          <label>Email
+            <input required name="email" type="email" autocomplete="email" />
+          </label>
+          <label>Password
+            <input required name="password" type="password" autocomplete="current-password" />
+          </label>
+          <button class="primary" type="submit">Sign in</button>
+        </form>
+      </section>
+
+      <section class="order-layout hidden" id="appShell">
+        <div class="panel">
+          <div class="toolbar">
+            <div>
+              <h2>Order tracking</h2>
+              <p class="panel-subtitle">Paid orders are sorted by processing ID so the earliest paid order is handled first.</p>
+            </div>
+          </div>
+          <div class="order-search-panel">
+            <label>Find order
+              <input id="orderSearchInput" type="search" autocomplete="off" placeholder="Email, name, street, postcode, item, #..." />
+            </label>
+            <div class="order-filter-row" id="orderStatusFilters" aria-label="Order filters">
+              <button class="active" type="button" data-order-filter="active">Active (not ordered) <span data-order-count="active">0</span></button>
+              <button type="button" data-order-filter="pending">Pending delivery <span data-order-count="pending">0</span></button>
+              <button type="button" data-order-filter="completed">Complete <span data-order-count="completed">0</span></button>
+              <button class="refund-filter" type="button" data-order-filter="refunds">Refunds <span data-order-count="refunds">0</span></button>
+              <button type="button" id="clearOrderSearch">Clear</button>
+            </div>
+          </div>
+          <div class="list" id="orderList"></div>
+        </div>
+
+        <aside class="panel">
+          <h2>Order issues</h2>
+          <p class="panel-subtitle">Use this while handling customer calls.</p>
+          <form id="issueForm">
+            <label>Order
+              <select data-order-select name="order_id"></select>
+            </label>
+            <label>Customer email
+              <input name="customer_email" type="email" />
+            </label>
+            <label>Summary
+              <input required name="summary" placeholder="Missing item, damaged box..." />
+            </label>
+            <label>Notes
+              <textarea name="notes"></textarea>
+            </label>
+            <button class="primary" type="submit">Log issue</button>
+          </form>
+
+          <hr />
+
+          <div class="list" id="issueList"></div>
+        </aside>
+      </section>
+      <section class="modal hidden" id="procurementModal" aria-modal="true" role="dialog" aria-labelledby="procurementModalTitle">
+        <div class="modal-card procurement-modal-card">
+          <div class="modal-head">
+            <div>
+              <h2 id="procurementModalTitle">Order stock</h2>
+              <p class="panel-subtitle" id="procurementModalSubtitle">Open eBay search, buy the stock, then save the supplier URL and order ID.</p>
+            </div>
+            <button class="icon-button" type="button" data-close-modal>Close</button>
+          </div>
+          <div class="procurement-body" id="procurementBody"></div>
+        </div>
+      </section>
+      <section class="print-area" id="printArea" aria-hidden="true"></section>
+    </main>
+  </body>
+</html>

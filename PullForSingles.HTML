@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>tcglocker Pull For Singles</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050816'/%3E%3Cpath d='M8 32a24 24 0 0 1 48 0H8Z' fill='%231877ff'/%3E%3Cpath d='M8 32a24 24 0 0 0 48 0H8Z' fill='%23fff'/%3E%3Ccircle cx='32' cy='32' r='10' fill='%23fff' stroke='%23050816' stroke-width='6'/%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link rel="preconnect" href="https://unpkg.com" />
+    <link rel="stylesheet" href="pull-for-singles.css?v=pulls-24" />
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script async src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" onload="window.lucide && window.lucide.createIcons()"></script>
+    <script defer src="pull-for-singles.js?v=pulls-24"></script>
+  </head>
+  <body>
+    <div class="scene-noise" aria-hidden="true"></div>
+    <main class="pull-shell">
+      <header class="topbar site-header">
+        <a class="brand" href="index.html?v=anime-live-24" aria-label="tcglocker store">
+          <span class="brand-mark" aria-hidden="true"><span></span></span>
+          <span>
+            <strong>tcglocker</strong>
+            <small>Sealed Pokemon TCG stock</small>
+          </span>
+        </a>
+        <nav class="nav nav-pills" aria-label="Store sections">
+          <a href="index.html?v=anime-live-24#catalog">Catalog</a>
+          <a href="index.html?v=anime-live-24#deals">Deals</a>
+          <a class="active" href="PullForSingles.HTML?v=pulls-24">Pulls</a>
+          <a href="index.html?v=anime-live-24#checkout">Checkout</a>
+        </nav>
+        <a class="account-button" id="accountStatus" href="#authPanel" aria-label="Go to pull sign in">
+          <i data-lucide="user-round"></i>
+          <span>
+            <strong id="accountStatusLabel">Join / Sign in</strong>
+            <small id="accountStatusMeta">Pull account</small>
+          </span>
+        </a>
+        <a class="cart-button" href="index.html?v=anime-live-24#checkout" aria-label="Go to basket checkout">
+          <i data-lucide="shopping-bag"></i>
+        </a>
+      </header>
+
+      <section class="hero-panel">
+        <section class="stage-card" aria-label="Pack opening animation">
+          <button class="stage-open-button" id="openSelectedPack" type="button">
+            <i data-lucide="package-open"></i>
+            OPEN PACK
+          </button>
+          <main class="stage" id="stage">
+            <section class="pack-shell" id="packShell" aria-label="Drag across the pack to reveal the pulled card">
+              <div class="pack">
+                <img class="whole" data-pack-art src="assets/pull/tcg-locker-pack-art.png" alt="" draggable="false" />
+                <div class="reward-aura"></div>
+                <img class="card-reveal" id="rewardCardImage" src="assets/pull/PokemonCard.png" alt="Pulled card preview" draggable="false" />
+                <img class="base" data-pack-art src="assets/pull/tcg-locker-pack-art.png" alt="" draggable="false" />
+                <div class="seal-back"></div>
+                <img class="seal" data-pack-art src="assets/pull/tcg-locker-pack-art.png" alt="" draggable="false" />
+                <div class="fx-mask">
+                  <div class="opening-bloom"></div>
+                  <div class="inside-glow"></div>
+                  <div class="tear"></div>
+                  <div class="r6-glare"></div>
+                  <div class="anime-slash"></div>
+                  <div class="sparks" aria-hidden="true">
+                    <span class="spark"></span><span class="spark"></span><span class="spark"></span><span class="spark"></span>
+                    <span class="spark"></span><span class="spark"></span><span class="spark"></span><span class="spark"></span>
+                    <span class="spark"></span><span class="spark"></span><span class="spark"></span><span class="spark"></span>
+                  </div>
+                </div>
+              </div>
+              <div class="impact"></div>
+            </section>
+          </main>
+          <div class="stage-status">
+            <strong id="selectedPackName">Choose a pack</strong>
+            <span id="selectedPackMeta">Singles grouped by set</span>
+          </div>
+          <div class="pull-decision hidden" id="pullDecision" aria-live="polite">
+            <span>Pull finished</span>
+            <strong>Keep or discard?</strong>
+            <div class="pull-decision-actions">
+              <button class="keep" type="button" data-pull-decision="kept">
+                <i data-lucide="archive"></i>
+                Keep
+              </button>
+              <button class="discard" type="button" data-pull-decision="discarded">
+                <i data-lucide="trash-2"></i>
+                Discard
+              </button>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="control-strip">
+        <button class="ghost" id="refreshPacks" type="button">
+          <i data-lucide="refresh-cw"></i>
+          Refresh tiers
+        </button>
+        <div class="credit-card">
+          <span>Credits</span>
+          <strong id="creditBalance">Sign in</strong>
+        </div>
+        <button class="ghost hidden" id="grantCredits" type="button">
+          <i data-lucide="coins"></i>
+          Add test credits
+        </button>
+        <button class="ghost" id="signOutButton" type="button">
+          <i data-lucide="log-out"></i>
+          Sign out
+        </button>
+      </section>
+
+      <section class="auth-panel" id="authPanel">
+        <div>
+          <h2>Sign in to pull</h2>
+          <p>Use your tcglocker account. Admin accounts can add test credits for local testing.</p>
+        </div>
+        <form id="signinForm">
+          <input required name="email" type="email" autocomplete="email" placeholder="Email" />
+          <input required name="password" type="password" autocomplete="current-password" placeholder="Password" />
+          <button class="primary" type="submit">
+            <i data-lucide="log-in"></i>
+            Sign in
+          </button>
+        </form>
+      </section>
+
+      <section class="content-grid">
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <h2>Choose a tier</h2>
+              <p id="packCount">Loading single-card stock...</p>
+            </div>
+          </div>
+          <div class="pack-grid" id="packGrid"></div>
+        </section>
+
+        <aside class="panel reveal-panel">
+          <div class="panel-head">
+            <div>
+              <h2>Latest pull</h2>
+              <p id="pullResultStatus">Open a pack to reveal cards.</p>
+            </div>
+          </div>
+          <div class="pulled-grid" id="pulledGrid"></div>
+        </aside>
+      </section>
+
+      <section class="panel history-panel">
+        <div class="panel-head">
+          <div>
+            <h2>Pull history</h2>
+            <p>One card per pack, saved to the signed-in customer account.</p>
+          </div>
+        </div>
+        <div class="history-tabs" id="historyTabs" aria-label="Pull history filters">
+          <button class="active" type="button" data-history-tab="all">All</button>
+          <button type="button" data-history-tab="kept">Kept</button>
+          <button type="button" data-history-tab="pending">Pending</button>
+          <button type="button" data-history-tab="discarded">Discarded</button>
+          <button type="button" data-history-tab="live">Live log</button>
+        </div>
+        <div class="history-toolbar" id="historyToolbar">
+          <span id="historyPageLabel">Page 1</span>
+          <div>
+            <button type="button" data-history-page="prev">
+              <i data-lucide="chevron-left"></i>
+              Prev
+            </button>
+            <button type="button" data-history-page="next">
+              Next
+              <i data-lucide="chevron-right"></i>
+            </button>
+          </div>
+        </div>
+        <div class="history-list" id="historyList"></div>
+      </section>
+
+      <p class="toast" id="toast" role="status" aria-live="polite"></p>
+    </main>
+  </body>
+</html>

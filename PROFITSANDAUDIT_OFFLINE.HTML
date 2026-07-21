@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>tcglocker Profit & Audit</title>
+    <link rel="stylesheet" href="offline-admin.css?v=ops-30" />
+    <link rel="stylesheet" href="profit-audit.css?v=audit-1" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="profit-audit.js?v=audit-2"></script>
+  </head>
+  <body data-panel="audit">
+    <main class="shell audit-shell">
+      <header class="topbar">
+        <div class="brand">
+          <strong>Profit & Audit</strong>
+          <span>Revenue, supplier costs, refunds, VAT estimates, and audit evidence.</span>
+        </div>
+        <nav class="nav">
+          <a href="index.html?v=anime-live-24">Store</a>
+          <a href="PullForSingles.HTML">Pulls</a>
+          <a href="OFFLINE_ADMIN.HTML">Stock admin</a>
+          <a href="OFFLINE_SHIPMENTPANEL.HTML">Shipments</a>
+          <button id="refreshButton" type="button">Refresh</button>
+          <button id="signOutButton" type="button">Sign out</button>
+        </nav>
+      </header>
+
+      <p class="status" id="status" role="status"></p>
+
+      <section class="auth-card hidden" id="authCard">
+        <h1>Admin sign in</h1>
+        <p class="panel-subtitle">Use the Supabase account added to the store admin allow-list.</p>
+        <form id="loginForm">
+          <label>Email
+            <input required name="email" type="email" autocomplete="email" />
+          </label>
+          <label>Password
+            <input required name="password" type="password" autocomplete="current-password" />
+          </label>
+          <button class="primary" type="submit">Sign in</button>
+        </form>
+      </section>
+
+      <section class="audit-app hidden" id="appShell">
+        <section class="panel audit-controls">
+          <div>
+            <h2>Audit period</h2>
+            <p class="panel-subtitle">Generated <span id="generatedAt">-</span>. VAT is an estimate for review before filing.</p>
+          </div>
+          <div class="audit-control-grid">
+            <label>Preset
+              <select id="periodPreset">
+                <option value="all">All time</option>
+                <option value="month">This month</option>
+                <option value="quarter">This quarter</option>
+                <option value="tax-year">UK tax year</option>
+                <option value="custom">Custom</option>
+              </select>
+            </label>
+            <label>From
+              <input id="dateFrom" type="date" />
+            </label>
+            <label>To
+              <input id="dateTo" type="date" />
+            </label>
+            <label>VAT rate %
+              <input id="vatRate" type="number" min="0" step="0.1" value="20" />
+            </label>
+            <label>Payment fee %
+              <input id="processorPercent" type="number" min="0" step="0.01" value="0" />
+            </label>
+            <label>Fixed fee GBP
+              <input id="processorFixed" type="number" min="0" step="0.01" value="0" />
+            </label>
+          </div>
+        </section>
+
+        <section class="audit-kpis" id="kpiGrid"></section>
+
+        <section class="audit-grid">
+          <article class="panel">
+            <div class="toolbar">
+              <div>
+                <h2>Monthly money flow</h2>
+                <p class="panel-subtitle">Gross, refunds, supplier cost, and estimated profit by month.</p>
+              </div>
+              <button type="button" data-export="vat">Export VAT CSV</button>
+            </div>
+            <div class="audit-chart" id="monthlyChart"></div>
+            <div class="audit-table-wrap compact-vat-ledger">
+              <table class="audit-table" id="vatLedger"></table>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="toolbar">
+              <div>
+                <h2>Order state</h2>
+                <p class="panel-subtitle">Operational state across the selected audit period.</p>
+              </div>
+            </div>
+            <div class="state-bars" id="stateBars"></div>
+          </article>
+        </section>
+
+        <section class="audit-grid audit-grid-wide">
+          <article class="panel">
+            <div class="toolbar">
+              <div>
+                <h2>Order ledger</h2>
+                <p class="panel-subtitle">Customer payments, Stripe IDs, VAT estimate, and fulfilment status.</p>
+              </div>
+              <button type="button" data-export="orders">Export order CSV</button>
+            </div>
+            <div class="audit-table-wrap">
+              <table class="audit-table" id="orderLedger"></table>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="toolbar">
+              <div>
+                <h2>Supplier ledger</h2>
+                <p class="panel-subtitle">Purchase URLs, supplier order IDs, product cost, delivery cost, and status.</p>
+              </div>
+              <button type="button" data-export="suppliers">Export supplier CSV</button>
+            </div>
+            <div class="audit-table-wrap">
+              <table class="audit-table" id="supplierLedger"></table>
+            </div>
+          </article>
+        </section>
+
+        <section class="audit-grid">
+          <article class="panel">
+            <div class="toolbar">
+              <div>
+                <h2>Refund ledger</h2>
+                <p class="panel-subtitle">Cancelled orders, queued refunds, Stripe refund IDs, and email status.</p>
+              </div>
+              <button type="button" data-export="refunds">Export refund CSV</button>
+            </div>
+            <div class="audit-table-wrap">
+              <table class="audit-table" id="refundLedger"></table>
+            </div>
+          </article>
+
+          <article class="panel">
+            <h2>Audit evidence</h2>
+            <div class="audit-checklist" id="auditChecklist"></div>
+          </article>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>
