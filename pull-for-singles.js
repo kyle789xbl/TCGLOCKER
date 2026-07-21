@@ -154,7 +154,7 @@ function imageUrl(value) {
   return value || FALLBACK_CARD_IMAGE;
 }
 
-function packArtUrl(pack = selectedPack()) {
+function packArtUrl() {
   return selectedTier()?.packArt || FALLBACK_PACK_IMAGE;
 }
 
@@ -373,10 +373,14 @@ function tierLiveCount(tier) {
   return tierEligiblePacks(tier).reduce((total, pack) => total + Number(pack.available_stock || 0), 0);
 }
 
+function tierHasStock(tier = selectedTier()) {
+  return tierLiveCount(tier) > 0;
+}
+
 function renderPackSelection() {
   const pack = selectedPack();
   const tier = selectedTier();
-  if (!pack) {
+  if (!tierHasStock(tier)) {
     selectedPackName.textContent = "No tier stock yet";
     selectedPackMeta.textContent = "Add live single-card stock first";
     stage.dataset.hint = "add live single-card stock first";
@@ -385,8 +389,8 @@ function renderPackSelection() {
     return;
   }
 
-  state.selectedPackKey = pack.pack_key;
-  setPackArt(packArtUrl(pack));
+  if (pack?.pack_key) state.selectedPackKey = pack.pack_key;
+  setPackArt(packArtUrl());
   selectedPackName.textContent = tier.name;
   if (state.revealReady) {
     selectedPackMeta.textContent = `${tier.priceLabel} tier | ${tier.creditCost} credits used`;
@@ -438,12 +442,12 @@ function renderCredits() {
 }
 
 function renderPacks() {
-  const livePackCount = state.packs.filter((pack) => Number(pack.available_stock || 0) > 0).length;
-  packCount.textContent = livePackCount
-    ? `${livePackCount} live single-card pools feeding four fixed pull tiers`
+  const guardedTierCount = PULL_TIERS.reduce((total, tier) => total + tierLiveCount(tier), 0);
+  packCount.textContent = guardedTierCount
+    ? `${guardedTierCount} supplier-guarded single cards feeding four fixed pull tiers`
     : "No single-card stock is available yet";
 
-  if (!livePackCount) {
+  if (!guardedTierCount) {
     packGrid.innerHTML = `<div class="empty-state">No live single-card stock found for pull tiers.</div>`;
     return;
   }
@@ -637,10 +641,15 @@ function renderAll() {
 }
 
 async function loadPacks() {
-  const data = await rpc("list_pull_single_packs");
-  state.packs = Array.isArray(data) ? data : [];
-  if (!state.selectedPackKey || !tierAllowsPack(selectedTier(), state.packs.find((pack) => pack.pack_key === state.selectedPackKey))) {
-    state.selectedPackKey = selectedPack()?.pack_key || "";
+  try {
+    const data = await rpc("list_pull_single_packs");
+    state.packs = Array.isArray(data) ? data : [];
+    if (!state.selectedPackKey || !tierAllowsPack(selectedTier(), state.packs.find((pack) => pack.pack_key === state.selectedPackKey))) {
+      state.selectedPackKey = selectedPack()?.pack_key || "";
+    }
+  } catch (_error) {
+    state.packs = [];
+    state.selectedPackKey = "";
   }
 }
 
@@ -712,8 +721,8 @@ async function openPack() {
     authPanel.scrollIntoView({ behavior: "smooth", block: "center" });
     return;
   }
-  if (!pack) {
-    showToast("Choose an available singles pack first.");
+  if (!tierHasStock(tier)) {
+    showToast("No live cards are available for this tier.");
     return;
   }
   if (state.currentDecision === "pending") {
@@ -729,7 +738,7 @@ async function openPack() {
   try {
     state.busy = true;
     state.latestCards = [];
-    state.selectedPackKey = pack.pack_key;
+    state.selectedPackKey = pack?.pack_key || "";
     state.revealReady = false;
     state.currentEventId = "";
     state.currentDecision = "";
@@ -737,13 +746,13 @@ async function openPack() {
     state.historyPage = 1;
     pullResultStatus.textContent = "Checking live single-card availability...";
     rewardCardImage.src = FALLBACK_CARD_IMAGE;
-    setPackArt(packArtUrl(pack));
+    setPackArt(packArtUrl());
     resetPackAnimation();
     renderAll();
 
     const result = await rpc("open_single_pull_tier", {
       p_tier_id: tier.id,
-      p_pack_key: pack.pack_key
+      p_pack_key: pack?.pack_key || null
     });
     const event = Array.isArray(result) ? result[0] : result;
     const cards = parseCards(event?.cards);
@@ -763,7 +772,7 @@ async function openPack() {
     renderAll();
     showToast("Pull ready. Drag the pack to reveal.");
 
-    await Promise.all([loadAccountData(), loadPacks()]);
+    await Promise.all([loadAccountData(), loadPacks(), loadTierSummary()]);
   } catch (error) {
     pullResultStatus.textContent = "Pull failed.";
     if (error.code === "PGRST202" || String(error.message || "").includes("open_single_pull_tier")) {
@@ -976,7 +985,6 @@ async function init() {
   bindEvents();
   resetPackAnimation();
   renderAll();
-  await loadPackArtManifest();
 
   supabaseClient.auth.onAuthStateChange(async (_event, session) => {
     state.user = session?.user || null;
