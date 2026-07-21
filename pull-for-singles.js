@@ -131,6 +131,9 @@ const openSfx = new Audio("assets/pull/OpenEffect.mp3?v=1");
 chargeSfx.loop = true;
 
 let dragging = false;
+let pendingPackDrag = false;
+let dragStartX = 0;
+let dragStartY = 0;
 let progress = 0;
 let forcedOpen = false;
 let raf = 0;
@@ -209,6 +212,7 @@ function setProgress(next) {
 function resetPackAnimation() {
   forcedOpen = false;
   dragging = false;
+  pendingPackDrag = false;
   stopCharge();
   cancelAnimationFrame(raf);
   clearTimeout(revealResetTimer);
@@ -239,6 +243,7 @@ function forceOpen() {
   if (forcedOpen) return;
   forcedOpen = true;
   dragging = false;
+  pendingPackDrag = false;
   stopCharge();
   playSound(tearSfx, 0.9);
   playSound(openSfx, 0.95);
@@ -858,26 +863,49 @@ async function addTestCredits() {
 function bindAnimation() {
   shell.addEventListener("pointerdown", (event) => {
     if (forcedOpen || !state.revealReady) return;
-    dragging = true;
-    playSound(selectSfx, 0.85);
-    startCharge();
-    shell.setPointerCapture(event.pointerId);
+    dragStartX = event.clientX;
+    dragStartY = event.clientY;
+    pendingPackDrag = true;
+    if (event.pointerType === "mouse") {
+      dragging = true;
+      pendingPackDrag = false;
+      playSound(selectSfx, 0.85);
+      startCharge();
+      shell.setPointerCapture(event.pointerId);
+    }
     progressFromPointer(event);
   });
 
   shell.addEventListener("pointermove", (event) => {
+    if (pendingPackDrag) {
+      const dx = Math.abs(event.clientX - dragStartX);
+      const dy = Math.abs(event.clientY - dragStartY);
+      if (dy > 8 && dy > dx) {
+        pendingPackDrag = false;
+        return;
+      }
+      if (dx > 10 && dx > dy) {
+        dragging = true;
+        pendingPackDrag = false;
+        playSound(selectSfx, 0.85);
+        startCharge();
+        shell.setPointerCapture(event.pointerId);
+      }
+    }
     if (!dragging) return;
     progressFromPointer(event);
   });
 
   shell.addEventListener("pointerup", (event) => {
     dragging = false;
+    pendingPackDrag = false;
     if (!forcedOpen) stopCharge();
-    shell.releasePointerCapture(event.pointerId);
+    if (shell.hasPointerCapture(event.pointerId)) shell.releasePointerCapture(event.pointerId);
   });
 
   shell.addEventListener("pointercancel", () => {
     dragging = false;
+    pendingPackDrag = false;
     if (!forcedOpen) stopCharge();
   });
 }
